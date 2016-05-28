@@ -13,7 +13,6 @@ var {
   ListView,
   ScrollView,
   TouchableHighlight,
-  NavigatorIOS,
   Component
  } = React;
 

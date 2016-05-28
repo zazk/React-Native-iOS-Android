@@ -6,7 +6,6 @@ var PrePhoto = require('./prephoto');
 var {
     StyleSheet,
     Image,
-    NavigatorIOS,
     View,
     Text,
     ScrollView,
