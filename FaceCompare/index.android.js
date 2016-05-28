@@ -34,6 +34,9 @@ var FaceCompare = React.createClass({
               title: 'Pick a Category'
           }}
           renderScene={(route, navigator) => {
+            if(route.name == 'Camera') {
+              return <FCCamera title={route.title} navigator={navigator} {...route.passProps} />
+            }
             if(route.name == 'Category') {
               return <PrePhoto title={route.title} navigator={navigator} {...route.passProps} />
             }
@@ -141,9 +144,9 @@ var PrePhoto = React.createClass({
   },
   onSelectGender: function (category) {
     this.props.navigator.push({
-      name: '',
+      name: 'Camera',
       component: FCCamera,
-      passProps: {category}
+      passProps: {category:category}
     });
   }
 });
