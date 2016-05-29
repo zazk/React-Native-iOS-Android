@@ -24,6 +24,39 @@ import React, {
 
 import Camera from 'react-native-camera';
 
+
+var NavigationBarRouteMapper = { 
+
+  LeftButton: function(route, navigator, index, navState) {
+    if (index === 0) {
+      return null;
+    }
+
+    var previousRoute = navState.routeStack[index - 1];
+    return (
+      <TouchableOpacity
+        onPress={() => navigator.pop()}
+        style={styles.navBarLeftButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          {previousRoute.title}
+        </Text>
+      </TouchableOpacity>
+    );
+  },
+  Title: function(route, navigator, index, navState) {
+    return (
+      <Text style={[styles.navBarText, styles.navBarTitleText]}>
+        {route.title}
+      </Text>
+    );
+  },
+  RightButton: function( route, navigator, index, navState ){
+    return(
+      <Text>{ route.rightButton }</Text>
+    )
+  }
+}
+
 var FaceCompare = React.createClass({
   render() {
     return (
@@ -45,18 +78,31 @@ var FaceCompare = React.createClass({
             }
                         
           }}
+          
+          navigationBar={
+             <Navigator.NavigationBar 
+              routeMapper={ NavigationBarRouteMapper }
+              style={ styles.navBar }  />} 
+               
           />
     );
   }
 });
 
 var CategoriesView = React.createClass ( {
-
+  _navigate(name) {
+  	this.props.navigator.push({
+    	name: 'Home',
+      passProps: {
+      	name: name
+      }
+    })
+  },
   componentDidMount: function() {
    this.fetchData();
  },
 
- getInitialState: function() {
+  getInitialState: function() {
    return {
    isLoading: true,
    dataSource: new ListView.DataSource({
@@ -180,6 +226,29 @@ var FCCamera = React.createClass({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  navBar: {
+    backgroundColor: '#efefef',
+  },
+  navBarText: {
+    fontSize: 16,
+  },
+  navBarTitleText: {
+    color: '#373E4D',
+    fontWeight: '500',
+    fontSize:24,
+    marginVertical: 9,
+    textAlign:'center',
+    alignItems: 'center'
+  },
+  navBarLeftButton: {
+    paddingLeft: 10,
+  },
+  navBarRightButton: {
+    paddingRight: 10,
+  },
+  navBarButtonText: {
+    color: '#5890FF',
   },
   imageContainer: {
     justifyContent: 'flex-start',
