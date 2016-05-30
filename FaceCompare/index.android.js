@@ -9,6 +9,7 @@ var parseURL = 'http://w.areminds.com/api.face.js';
 
 import React, {
   AppRegistry,
+  CameraRoll,
   Image,
   ListView,
   Navigator,
@@ -31,7 +32,7 @@ var NavigationBarRouteMapper = {
     if (index === 0) {
       return null;
     }
-
+    console.log("INDEX:",index);
     var previousRoute = navState.routeStack[index - 1];
     return (
       <TouchableOpacity
@@ -74,7 +75,7 @@ var FaceCompare = React.createClass({
               return <PrePhoto title={route.title} navigator={navigator} {...route.passProps} />
             }
             if(route.name == 'Home') {
-              return <CategoriesView title={route.title} navigator={navigator} />
+              return <CategoriesView title={route.title} navigator={navigator} {...route.passProps}  />
             }
                         
           }}
@@ -149,9 +150,7 @@ var RenderCell = React.createClass ({
             source={{uri: this.props.category.imageFemale.url}}
             style={styles.thumbnail}/>
         </View>
-        <View style={styles.titleCell}>
           <Text style={styles.trackTitle}>{this.props.category.name}</Text>
-        </View>
       </View>
       </TouchableOpacity >
     );
@@ -160,6 +159,7 @@ var RenderCell = React.createClass ({
   selectCategory: function (category) {
     this.props.navigator.push({
       name: 'Category', 
+      title: category.name,
       passProps: {category:category}
     });
   } 
@@ -167,6 +167,14 @@ var RenderCell = React.createClass ({
 });
 
 var PrePhoto = React.createClass({
+  _navigate(name) {
+  	this.props.navigator.push({
+    	name: 'Category',
+      passProps: {
+      	name: name
+      }
+    })
+  },
   render: function() {
     return (
       <View style={styles.trackScreen}>
@@ -191,6 +199,7 @@ var PrePhoto = React.createClass({
   onSelectGender: function (category) {
     this.props.navigator.push({
       name: 'Camera',
+      title:'Take a Picture',
       component: FCCamera,
       passProps: {category:category}
     });
@@ -198,6 +207,14 @@ var PrePhoto = React.createClass({
 });
 
 var FCCamera = React.createClass({
+  _navigate(name) {
+  	this.props.navigator.push({
+    	name: 'Camera',
+      passProps: {
+      	name: name
+      }
+    })
+  },
   render() {
     return (
       <View style={styles.container}>
@@ -208,8 +225,8 @@ var FCCamera = React.createClass({
           style={styles.preview}
           aspect={Camera.constants.Aspect.Fill}
           captureTarget={Camera.constants.CaptureTarget.temp}>
-          <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
         </Camera>
+        <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
       </View>
     );
   },
@@ -297,7 +314,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: '#000',
     padding: 10,
-    margin: 40
+    margin: 40,
+    textAlign:'center'
   }
 });
 
