@@ -3,14 +3,16 @@
 var CategoriesView = require('./app/categories.js');
 var AppView = require('./app/app.js');
 var BadInstagramCloneApp = require('./app/camera.js');
-var parseURL = 'https://pjKUgtat9p0T7gbxhtIwn5OSCnAhvitNmOYPUaMp:javascript-key=6dE2rjU46uXAJBtYExMhqWM0zrUFibsugd9LgQvN@api.parse.com/1/classes/Categories?where={"readyNew" :true}';
+// Android has a problem with autentication
+//var parseURL = 'https://pjKUgtat9p0T7gbxhtIwn5OSCnAhvitNmOYPUaMp:javascript-key=6dE2rjU46uXAJBtYExMhqWM0zrUFibsugd9LgQvN@api.parse.com/1/classes/Categories?where={"readyNew" :true}';
+var parseURL = 'http://w.areminds.com/api.face.js';
 
 import React, {
   AppRegistry,
   CameraRoll,
   Image,
   ListView,
-  NavigatorIOS,
+  Navigator,
   StyleSheet,
   Text,
   Dimensions,
@@ -23,25 +25,85 @@ import React, {
 
 import Camera from 'react-native-camera';
 
+
+var NavigationBarRouteMapper = { 
+
+  LeftButton: function(route, navigator, index, navState) {
+    if (index === 0) {
+      return null;
+    }
+    console.log("INDEX:",index);
+    var previousRoute = navState.routeStack[index - 1];
+    return (
+      <TouchableOpacity
+        onPress={() => navigator.pop()}
+        style={styles.navBarLeftButton}>
+        <Text style={[styles.navBarText, styles.navBarButtonText]}>
+          {previousRoute.title}
+        </Text>
+      </TouchableOpacity>
+    );
+  },
+  Title: function(route, navigator, index, navState) {
+    return (
+      <Text style={[styles.navBarText, styles.navBarTitleText]}>
+        {route.title}
+      </Text>
+    );
+  },
+  RightButton: function( route, navigator, index, navState ){
+    return(
+      <Text>{ route.rightButton }</Text>
+    )
+  }
+}
+
 var FaceCompare = React.createClass({
   render() {
     return (
-      <NavigatorIOS style={styles.container}
-        initialRoute={{
-                title: 'Pick a Category',
-                component: CategoriesView,
-            }} />
+      <Navigator
+          style={styles.container}
+          initialRoute={{
+              name:'Home',
+              title: 'Pick a Category'
+          }}
+          renderScene={(route, navigator) => {
+            if(route.name == 'Camera') {
+              return <FCCamera title={route.title} navigator={navigator} {...route.passProps} />
+            }
+            if(route.name == 'Category') {
+              return <PrePhoto title={route.title} navigator={navigator} {...route.passProps} />
+            }
+            if(route.name == 'Home') {
+              return <CategoriesView title={route.title} navigator={navigator} {...route.passProps}  />
+            }
+                        
+          }}
+          
+          navigationBar={
+             <Navigator.NavigationBar 
+              routeMapper={ NavigationBarRouteMapper }
+              style={ styles.navBar }  />} 
+               
+          />
     );
   }
 });
 
-var CategoriesView = React.createClass ({
-
+var CategoriesView = React.createClass ( {
+  _navigate(name) {
+  	this.props.navigator.push({
+    	name: 'Home',
+      passProps: {
+      	name: name
+      }
+    })
+  },
   componentDidMount: function() {
    this.fetchData();
  },
 
- getInitialState: function() {
+  getInitialState: function() {
    return {
    isLoading: true,
    dataSource: new ListView.DataSource({
@@ -88,24 +150,31 @@ var RenderCell = React.createClass ({
             source={{uri: this.props.category.imageFemale.url}}
             style={styles.thumbnail}/>
         </View>
-        <View style={styles.titleCell}>
           <Text style={styles.trackTitle}>{this.props.category.name}</Text>
-        </View>
       </View>
       </TouchableOpacity >
     );
   },
-
+  
   selectCategory: function (category) {
     this.props.navigator.push({
-      name: category.name,
-      component: PrePhoto,
-      passProps: {category}
+      name: 'Category', 
+      title: category.name,
+      passProps: {category:category}
     });
-  }
+  } 
+  
 });
 
 var PrePhoto = React.createClass({
+  _navigate(name) {
+  	this.props.navigator.push({
+    	name: 'Category',
+      passProps: {
+      	name: name
+      }
+    })
+  },
   render: function() {
     return (
       <View style={styles.trackScreen}>
@@ -129,14 +198,23 @@ var PrePhoto = React.createClass({
   },
   onSelectGender: function (category) {
     this.props.navigator.push({
-      name: '',
+      name: 'Camera',
+      title:'Take a Picture',
       component: FCCamera,
-      passProps: {category}
+      passProps: {category:category}
     });
   }
 });
 
 var FCCamera = React.createClass({
+  _navigate(name) {
+  	this.props.navigator.push({
+    	name: 'Camera',
+      passProps: {
+      	name: name
+      }
+    })
+  },
   render() {
     return (
       <View style={styles.container}>
@@ -147,8 +225,8 @@ var FCCamera = React.createClass({
           style={styles.preview}
           aspect={Camera.constants.Aspect.Fill}
           captureTarget={Camera.constants.CaptureTarget.temp}>
-          <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
         </Camera>
+        <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
       </View>
     );
   },
@@ -165,6 +243,29 @@ var FCCamera = React.createClass({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  navBar: {
+    backgroundColor: '#efefef',
+  },
+  navBarText: {
+    fontSize: 16,
+  },
+  navBarTitleText: {
+    color: '#373E4D',
+    fontWeight: '500',
+    fontSize:24,
+    marginVertical: 9,
+    textAlign:'center',
+    alignItems: 'center'
+  },
+  navBarLeftButton: {
+    paddingLeft: 10,
+  },
+  navBarRightButton: {
+    paddingRight: 10,
+  },
+  navBarButtonText: {
+    color: '#5890FF',
   },
   imageContainer: {
     justifyContent: 'flex-start',
@@ -213,7 +314,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: '#000',
     padding: 10,
-    margin: 40
+    margin: 40,
+    textAlign:'center'
   }
 });
 
