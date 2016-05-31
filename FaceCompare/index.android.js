@@ -68,14 +68,17 @@ var FaceCompare = React.createClass({
               title: 'Pick a Category'
           }}
           renderScene={(route, navigator) => {
-            if(route.name == 'Camera') {
-              return <FCCamera title={route.title} navigator={navigator} {...route.passProps} />
+            if(route.name == 'Home') {
+              return <CategoriesView title={route.title} navigator={navigator} {...route.passProps}  />
             }
             if(route.name == 'Category') {
               return <PrePhoto title={route.title} navigator={navigator} {...route.passProps} />
             }
-            if(route.name == 'Home') {
-              return <CategoriesView title={route.title} navigator={navigator} {...route.passProps}  />
+            if(route.name == 'Camera') {
+              return <FCCamera title={route.title} navigator={navigator} {...route.passProps} />
+            }
+            if(route.name == 'Preview') {
+              return <PreviewCompare title={route.title} navigator={navigator} {...route.passProps}  />
             }
                         
           }}
@@ -215,30 +218,79 @@ var FCCamera = React.createClass({
       }
     })
   },
-  render() {
-    return (
-      <View style={styles.container}>
-        <Camera
-          ref={(cam) => {
-            this.camera = cam;
-          }}
-          style={styles.preview}
-          aspect={Camera.constants.Aspect.Fill}
-          captureTarget={Camera.constants.CaptureTarget.temp}>
-        </Camera>
-        <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
-      </View>
-    );
+  
+  getInitialState: function() {
+      return {
+          cameraType: Camera.constants.Type.back
+      }
   },
 
-  takePicture() {
-    this.camera.capture()
-      .then((data) => console.log(data))
+  render() {
+    return ( 
+      <View style={styles.container}>
+        <Camera
+          ref="cam"
+          style={styles.preview}
+          aspect={Camera.constants.Aspect.Fill}
+          type={this.state.cameraType}
+          captureTarget={Camera.constants.CaptureTarget.temp} >
+        </Camera> 
+        
+          <View style={styles.buttonBar}>
+            <TouchableHighlight style={styles.button} onPress={this._switchCamera}>
+              <Text style={styles.buttonText} >FLIP</Text>
+            </TouchableHighlight>
+            <TouchableHighlight style={styles.button} onPress={this._takePicture}>
+              <Text style={styles.buttonText} >CAPTURE</Text>
+            </TouchableHighlight>
+          </View>
+       </View>
+    );
+  }, 
+
+  _switchCamera: function() {
+    var state = this.state;
+    state.cameraType = state.cameraType === Camera.constants.Type.back ? Camera.constants.Type.front : Camera.constants.Type.back;
+    this.setState(state);
+  
+  },
+
+  _takePicture: function() {
+    this.refs.cam.capture()
+      .then((data) => {
+        console.log(data);
+        this.props.navigator.push({
+          name: 'Preview',
+          title:'Preview',
+          passProps: {image:data}
+        });
+      })
       .catch(err => console.error(err));
   }
+
 });
 
+var PreviewCompare = React.createClass({
+  render(){
+    return (
+      <View style={styles.container}>
+        <Image
+          style={styles.preview}
+          source={{uri: this.props.image}}>
+        </Image>          
+        <View style={styles.buttonBar}>
+            <TouchableHighlight style={styles.button} onPress={this._compare}>
+              <Text style={styles.buttonText} >COMPARE</Text>
+            </TouchableHighlight> 
+          </View>
+      </View>
+    )
+  },
 
+  _takePicture: function() {
+    console.log(this);
+  }
+})
 
 const styles = StyleSheet.create({
   container: {
@@ -303,20 +355,28 @@ const styles = StyleSheet.create({
   },
   preview: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
-    height: Dimensions.get('window').height,
-    width: Dimensions.get('window').width
+    backgroundColor:'transparent'
   },
-  capture: {
-    flex: 0,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    color: '#000',
+  buttonBar: {
+    flexDirection: "row",
+    position: "absolute",
+    bottom: 25,
+    right: 0,
+    left: 0,
+    justifyContent: "center"
+  },
+  button: {
     padding: 10,
-    margin: 40,
-    textAlign:'center'
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+    margin: 5
+  },
+  buttonText: {
+      color: "#FFFFFF"
   }
+
 });
 
 AppRegistry.registerComponent('FaceCompare', () => FaceCompare);
