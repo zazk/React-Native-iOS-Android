@@ -26,7 +26,7 @@ import React, {
 import Camera from 'react-native-camera';
 
 
-var NavigationBarRouteMapper = { 
+var NavigationBarRouteMapper = {
 
   LeftButton: function(route, navigator, index, navState) {
     if (index === 0) {
@@ -80,14 +80,14 @@ var FaceCompare = React.createClass({
             if(route.name == 'Preview') {
               return <PreviewCompare title={route.title} navigator={navigator} {...route.passProps}  />
             }
-                        
+
           }}
-          
+
           navigationBar={
-             <Navigator.NavigationBar 
+             <Navigator.NavigationBar
               routeMapper={ NavigationBarRouteMapper }
-              style={ styles.navBar }  />} 
-               
+              style={ styles.navBar }  />}
+
           />
     );
   }
@@ -158,15 +158,15 @@ var RenderCell = React.createClass ({
       </TouchableOpacity >
     );
   },
-  
+
   selectCategory: function (category) {
     this.props.navigator.push({
-      name: 'Category', 
+      name: 'Category',
       title: category.name,
       passProps: {category:category}
     });
-  } 
-  
+  }
+
 });
 
 var PrePhoto = React.createClass({
@@ -218,7 +218,7 @@ var FCCamera = React.createClass({
       }
     })
   },
-  
+
   getInitialState: function() {
       return {
           cameraType: Camera.constants.Type.back
@@ -226,7 +226,7 @@ var FCCamera = React.createClass({
   },
 
   render() {
-    return ( 
+    return (
       <View style={styles.container}>
         <Camera
           ref="cam"
@@ -234,25 +234,25 @@ var FCCamera = React.createClass({
           aspect={Camera.constants.Aspect.Fill}
           type={this.state.cameraType}
           captureTarget={Camera.constants.CaptureTarget.temp} >
-        </Camera> 
-        
-          <View style={styles.buttonBar}>
-            <TouchableHighlight style={styles.button} onPress={this._switchCamera}>
-              <Text style={styles.buttonText} >FLIP</Text>
-            </TouchableHighlight>
-            <TouchableHighlight style={styles.button} onPress={this._takePicture}>
-              <Text style={styles.buttonText} >CAPTURE</Text>
-            </TouchableHighlight>
-          </View>
-       </View>
+        </Camera>
+
+        <View style={styles.buttonBar}>
+          <TouchableHighlight style={styles.button} onPress={this._switchCamera}>
+            <Text style={styles.buttonText} >FLIP</Text>
+          </TouchableHighlight>
+          <TouchableHighlight style={styles.button} onPress={this._takePicture}>
+            <Text style={styles.buttonText} >CAPTURE</Text>
+          </TouchableHighlight>
+        </View>
+      </View>
     );
-  }, 
+  },
 
   _switchCamera: function() {
     var state = this.state;
     state.cameraType = state.cameraType === Camera.constants.Type.back ? Camera.constants.Type.front : Camera.constants.Type.back;
     this.setState(state);
-  
+
   },
 
   _takePicture: function() {
@@ -277,17 +277,17 @@ var PreviewCompare = React.createClass({
         <Image
           style={styles.preview}
           source={{uri: this.props.image}}>
-        </Image>          
+        </Image>
         <View style={styles.buttonBar}>
             <TouchableHighlight style={styles.button} onPress={this._compare}>
               <Text style={styles.buttonText} >COMPARE</Text>
-            </TouchableHighlight> 
-          </View>
+            </TouchableHighlight>
+        </View>
       </View>
     )
   },
 
-  _takePicture: function() {
+  _compare: function() {
     console.log(this);
   }
 })
@@ -371,6 +371,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: "#FFFFFF",
+    backgroundColor:'#000000',
     margin: 5
   },
   buttonText: {
