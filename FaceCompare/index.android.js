@@ -15,6 +15,7 @@ import React, {
   Navigator,
   StyleSheet,
   Text,
+  Alert,
   Dimensions,
   TextInput,
   TouchableHighlight,
@@ -289,8 +290,40 @@ var PreviewCompare = React.createClass({
 
   _compare: function() {
     console.log(this);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'http://w.areminds.com/f/upload.php');
+    xhr.onload = () => {
+      if (xhr.status !== 200) {
+        Alert.alert(
+          'Alert Title',
+          'My Alert Msg',
+          [
+            {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
+            {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+            {text: 'OK', onPress: () => console.log('OK Pressed')},
+          ]
+        );
+        return;
+      }
+      console.log("Upload Success",xhr.status,xhr.responseText);
+      // upload succeeded
+    };
+
+    var formdata = new FormData();
+    formdata.append('image', {type: "image/jpg", name: + new Date() + 'image.jpg', uri: this.props.image });
+    console.log("Sent This!", this.props.image,xhr.upload);
+
+    if (xhr.upload) {
+      xhr.upload.onprogress = (event) => {
+        console.log('upload onprogress', event);
+        if (event.lengthComputable) {
+          this.setState({uploadProgress: event.loaded / event.total});
+        }
+      };
+    }
+    xhr.send(formdata);
   }
-})
+});
 
 const styles = StyleSheet.create({
   container: {
