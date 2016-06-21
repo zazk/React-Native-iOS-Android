@@ -1,44 +1,59 @@
-var fs = require('fs')
-var path = require('path')
-var Canvas = require('canvas')
+var Canvas = require('canvas');
+var objectdetect = require('./compare/objectdetect');
+var canvas = new Canvas();
+console.log(canvas);
 
-var canvas = new Canvas(200, 200)
-var ctx = canvas.getContext('2d')
+var context = canvas.getContext('2d');
+var size = 250;
+var detector;
+var classifier = objectdetect.frontalface;
 
-ctx.globalAlpha = 0.2
+function detectFaces(canvas) {
+    // Detect faces in the image:
+    var rects = detector.detect(canvas);
+    
+    // Draw rectangles around detected faces:
+    for (var i = 0; i < rects.length; ++i) {
+        var coord = rects[i];
+        context.beginPath();
+        context.lineWidth = 1;
+        context.strokeStyle = 'rgba(0, 255, 255, 0.75)';
+        context.rect(coord[0], coord[1], coord[2], coord[3]);
+        context.stroke();
+    }
+}
 
-ctx.strokeRect(0, 0, 200, 200)
-ctx.lineTo(0, 100)
-ctx.lineTo(200, 100)
-ctx.stroke()
+function loadImage(src) {
+    image = new Image();
+    image.onload = function() {
+        canvas.width = ~~(size * image.width / image.height);
+        canvas.height = ~~(size);
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        detector = new objectdetect.detector(canvas.width, canvas.height, 1.2, classifier);
+        detectFaces(canvas);
+    }
+    image.src = src;
+}
 
-ctx.beginPath()
-ctx.lineTo(100, 0)
-ctx.lineTo(100, 200)
-ctx.stroke()
+function handleFileSelect(e) {
+    var file = e.target.files[0];
+    var reader = new FileReader();
+    
+    reader.onload = function(e) {
+        loadImage(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
 
-ctx.globalAlpha = 1
-ctx.font = 'normal 40px Impact, serif'
+function handleClassifierSelect(e) {
+    classifier = objectdetect[e.target.value];
+    detector = new objectdetect.detector(canvas.width, canvas.height, 1.2, classifier);
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    detectFaces(canvas);
+}
 
-ctx.rotate(0.5)
-ctx.translate(20, -40)
 
-ctx.lineWidth = 1
-ctx.strokeStyle = '#ddd'
-ctx.strokeText('Wahoo', 50, 100)
+document.getElementById('file').addEventListener('change', handleFileSelect, false);
+document.getElementById('select').addEventListener('change', handleClassifierSelect, false);
 
-ctx.fillStyle = '#000'
-ctx.fillText('Wahoo', 49, 99)
-
-var m = ctx.measureText('Wahoo')
-
-ctx.strokeStyle = '#f00'
-
-ctx.strokeRect(
-  49 + m.actualBoundingBoxLeft,
-  99 - m.actualBoundingBoxAscent,
-  m.actualBoundingBoxRight - m.actualBoundingBoxLeft,
-  m.actualBoundingBoxAscent + m.actualBoundingBoxDescent
-)
-
-canvas.createPNGStream().pipe(fs.createWriteStream(path.join(__dirname, 'text.png')))
+loadImage('img/faces.jpg');
