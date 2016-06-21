@@ -1,7 +1,7 @@
 var Canvas = require('canvas');
+var Image = Canvas.Image
 var objectdetect = require('./compare/objectdetect');
 var canvas = new Canvas();
-console.log(canvas);
 
 var context = canvas.getContext('2d');
 var size = 250;
@@ -20,11 +20,13 @@ function detectFaces(canvas) {
         context.strokeStyle = 'rgba(0, 255, 255, 0.75)';
         context.rect(coord[0], coord[1], coord[2], coord[3]);
         context.stroke();
-    }
+    } 
+    console.log("Rects", rects);
 }
 
 function loadImage(src) {
     image = new Image();
+
     image.onload = function() {
         canvas.width = ~~(size * image.width / image.height);
         canvas.height = ~~(size);
@@ -51,9 +53,5 @@ function handleClassifierSelect(e) {
     canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
     detectFaces(canvas);
 }
-
-
-document.getElementById('file').addEventListener('change', handleFileSelect, false);
-document.getElementById('select').addEventListener('change', handleClassifierSelect, false);
 
 loadImage('img/faces.jpg');
