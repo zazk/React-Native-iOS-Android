@@ -5,7 +5,9 @@ var AppView = require('./app/app.js');
 var BadInstagramCloneApp = require('./app/camera.js');
 // Android has a problem with autentication
 //var parseURL = 'https://pjKUgtat9p0T7gbxhtIwn5OSCnAhvitNmOYPUaMp:javascript-key=6dE2rjU46uXAJBtYExMhqWM0zrUFibsugd9LgQvN@api.parse.com/1/classes/Categories?where={"readyNew" :true}';
-var parseURL = 'http://w.areminds.com/api.face.js';
+//var parseURL = 'http://w.areminds.com/api.face.js';
+var parseURL = 'http://45.55.231.112/categories/?format=json';
+
 
 import React, {
   AppRegistry,
@@ -291,9 +293,11 @@ var PreviewCompare = React.createClass({
   _compare: function() {
     console.log(this);
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://w.areminds.com/f/upload.php');
+    // OLD URL: http://w.areminds.com/f/upload.php
+    xhr.open('POST', 'http://45.55.231.112/queryimages/');
     xhr.onload = () => {
-      if (xhr.status !== 200) {
+      if (xhr.readyState !== xhr.DONE) {
+        console.log("UPLOAD FAILED:", xhr);
         Alert.alert(
           'Alert Title',
           'My Alert Msg',
@@ -305,12 +309,18 @@ var PreviewCompare = React.createClass({
         );
         return;
       }
-      console.log("Upload Success",xhr.status,xhr.responseText);
+      
       // upload succeeded
+      console.log("UPLOAD SUCCESS",xhr,xhr.status,xhr.responseText, "JSON", JSON.parse(xhr.responseText));
+
     };
 
     var formdata = new FormData();
-    formdata.append('image', {type: "image/jpg", name: + new Date() + 'image.jpg', uri: this.props.image });
+    formdata.append('original_image', {type: "image/jpg", name: + new Date() + 'image.jpg', uri: this.props.image }); 
+    formdata.append("title", "testing" + +(new Date()));
+    formdata.append("category", 5);
+    formdata.append("gender", "M");
+
     console.log("Sent This!", this.props.image,xhr.upload);
 
     if (xhr.upload) {

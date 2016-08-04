@@ -5,7 +5,9 @@ var AppView = require('./app/app.js');
 var BadInstagramCloneApp = require('./app/camera.js');
 // Android has a problem with autentication
 //var parseURL = 'https://pjKUgtat9p0T7gbxhtIwn5OSCnAhvitNmOYPUaMp:javascript-key=6dE2rjU46uXAJBtYExMhqWM0zrUFibsugd9LgQvN@api.parse.com/1/classes/Categories?where={"readyNew" :true}';
-var parseURL = 'http://w.areminds.com/api.face.js';
+//var parseURL = 'http://w.areminds.com/api.face.js';
+var parseURL = 'http://45.55.231.112/categories/?format=json';
+
 
 import React, {
   AppRegistry,
@@ -15,6 +17,7 @@ import React, {
   Navigator,
   StyleSheet,
   Text,
+  Alert,
   Dimensions,
   TextInput,
   TouchableHighlight,
@@ -26,7 +29,7 @@ import React, {
 import Camera from 'react-native-camera';
 
 
-var NavigationBarRouteMapper = { 
+var NavigationBarRouteMapper = {
 
   LeftButton: function(route, navigator, index, navState) {
     if (index === 0) {
@@ -68,23 +71,26 @@ var FaceCompare = React.createClass({
               title: 'Pick a Category'
           }}
           renderScene={(route, navigator) => {
-            if(route.name == 'Camera') {
-              return <FCCamera title={route.title} navigator={navigator} {...route.passProps} />
+            if(route.name == 'Home') {
+              return <CategoriesView title={route.title} navigator={navigator} {...route.passProps}  />
             }
             if(route.name == 'Category') {
               return <PrePhoto title={route.title} navigator={navigator} {...route.passProps} />
             }
-            if(route.name == 'Home') {
-              return <CategoriesView title={route.title} navigator={navigator} {...route.passProps}  />
+            if(route.name == 'Camera') {
+              return <FCCamera title={route.title} navigator={navigator} {...route.passProps} />
             }
-                        
+            if(route.name == 'Preview') {
+              return <PreviewCompare title={route.title} navigator={navigator} {...route.passProps}  />
+            }
+
           }}
-          
+
           navigationBar={
-             <Navigator.NavigationBar 
+             <Navigator.NavigationBar
               routeMapper={ NavigationBarRouteMapper }
-              style={ styles.navBar }  />} 
-               
+              style={ styles.navBar }  />}
+
           />
     );
   }
@@ -155,15 +161,15 @@ var RenderCell = React.createClass ({
       </TouchableOpacity >
     );
   },
-  
+
   selectCategory: function (category) {
     this.props.navigator.push({
-      name: 'Category', 
+      name: 'Category',
       title: category.name,
       passProps: {category:category}
     });
-  } 
-  
+  }
+
 });
 
 var PrePhoto = React.createClass({
@@ -215,30 +221,119 @@ var FCCamera = React.createClass({
       }
     })
   },
+
+  getInitialState: function() {
+      return {
+          cameraType: Camera.constants.Type.back
+      }
+  },
+
   render() {
     return (
       <View style={styles.container}>
         <Camera
-          ref={(cam) => {
-            this.camera = cam;
-          }}
+          ref="cam"
           style={styles.preview}
           aspect={Camera.constants.Aspect.Fill}
-          captureTarget={Camera.constants.CaptureTarget.temp}>
+          type={this.state.cameraType}
+          captureTarget={Camera.constants.CaptureTarget.temp} >
         </Camera>
-        <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
+
+        <View style={styles.buttonBar}>
+          <TouchableHighlight style={styles.button} onPress={this._switchCamera}>
+            <Text style={styles.buttonText} >FLIP</Text>
+          </TouchableHighlight>
+          <TouchableHighlight style={styles.button} onPress={this._takePicture}>
+            <Text style={styles.buttonText} >CAPTURE</Text>
+          </TouchableHighlight>
+        </View>
       </View>
     );
   },
 
-  takePicture() {
-    this.camera.capture()
-      .then((data) => console.log(data))
+  _switchCamera: function() {
+    var state = this.state;
+    state.cameraType = state.cameraType === Camera.constants.Type.back ? Camera.constants.Type.front : Camera.constants.Type.back;
+    this.setState(state);
+
+  },
+
+  _takePicture: function() {
+    this.refs.cam.capture()
+      .then((data) => {
+        console.log(data);
+        this.props.navigator.push({
+          name: 'Preview',
+          title:'Preview',
+          passProps: {image:data}
+        });
+      })
       .catch(err => console.error(err));
   }
+
 });
 
+var PreviewCompare = React.createClass({
+  render(){
+    return (
+      <View style={styles.container}>
+        <Image
+          style={styles.preview}
+          source={{uri: this.props.image}}>
+        </Image>
+        <View style={styles.buttonBar}>
+            <TouchableHighlight style={styles.button} onPress={this._compare}>
+              <Text style={styles.buttonText} >COMPARE</Text>
+            </TouchableHighlight>
+        </View>
+      </View>
+    )
+  },
 
+  _compare: function() {
+    console.log(this);
+    var xhr = new XMLHttpRequest();
+    // OLD URL: http://w.areminds.com/f/upload.php
+    xhr.open('POST', 'http://45.55.231.112/queryimages/');
+    xhr.onload = () => {
+      if (xhr.readyState !== xhr.DONE) {
+        console.log("UPLOAD FAILED:", xhr);
+        Alert.alert(
+          'Alert Title',
+          'My Alert Msg',
+          [
+            {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
+            {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+            {text: 'OK', onPress: () => console.log('OK Pressed')},
+          ]
+        );
+        return;
+      }
+      
+      // upload succeeded
+      console.log("UPLOAD SUCCESS",xhr,xhr.status,xhr.responseText, "JSON", JSON.parse(xhr.responseText));
+
+    };
+
+    var formdata = new FormData();
+    formdata.append('original_image', {type: "image/jpg", name: + new Date() + 'image.jpg', uri: this.props.image }); 
+    formdata.append("title", "testing" + +(new Date()));
+    formdata.append("category", 5);
+    formdata.append("gender", "M");
+
+    console.log("Sent This!", this.props.image,xhr.upload);
+
+    if (xhr.upload) {
+      xhr.upload.onprogress = (event) => {
+        console.log('upload onprogress', event);
+        if (event.lengthComputable) {
+          this.setState({uploadProgress: event.loaded / event.total});
+        }
+      };
+    }
+    xhr.send(formdata);
+  }
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -303,20 +398,29 @@ const styles = StyleSheet.create({
   },
   preview: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
-    height: Dimensions.get('window').height,
-    width: Dimensions.get('window').width
+    backgroundColor:'transparent'
   },
-  capture: {
-    flex: 0,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    color: '#000',
+  buttonBar: {
+    flexDirection: "row",
+    position: "absolute",
+    bottom: 25,
+    right: 0,
+    left: 0,
+    justifyContent: "center"
+  },
+  button: {
     padding: 10,
-    margin: 40,
-    textAlign:'center'
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+    backgroundColor:'#000000',
+    margin: 5
+  },
+  buttonText: {
+      color: "#FFFFFF"
   }
+
 });
 
 AppRegistry.registerComponent('FaceCompare', () => FaceCompare);
