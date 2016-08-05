@@ -83,6 +83,9 @@ var FaceCompare = React.createClass({
             if(route.name == 'Preview') {
               return <PreviewCompare title={route.title} navigator={navigator} {...route.passProps}  />
             }
+            if(route.name == 'MatchScreen'){
+              return <MatchScreen title={route.title} navigator={navigator} {...route.passProps} />
+            }
 
           }}
 
@@ -308,6 +311,23 @@ var PreviewCompare = React.createClass({
           ]
         );
         return;
+      } else{
+        var obj = JSON.parse(xhr.responseText);
+        if (obj.best_match !=null){
+          this.props.navigator.push({
+            name: 'MatchScreen',
+            title:'MatchScreen',
+            passProps: {image:obj.best_match}
+          });
+        }else{
+          Alert.alert(
+            'Image not matched',
+            'Try again',
+            [
+              {text: 'OK', onPress: () => console.log('OK Pressed')}
+            ]
+          );
+        }
       }
       
       // upload succeeded
@@ -332,6 +352,38 @@ var PreviewCompare = React.createClass({
       };
     }
     xhr.send(formdata);
+  }
+});
+
+
+
+var MatchScreen = React.createClass({
+  _navigate(name) {
+  	this.props.navigator.push({
+    	name: 'Match',
+      passProps: {
+      	name: name
+      }
+    })
+  },
+  render(){
+    return (
+      <View style={styles.container}>
+        <Image
+          style={styles.preview}
+          source={{uri: this.props.image}}>
+        </Image>
+        <View style={styles.buttonBar}>
+            <TouchableHighlight style={styles.button} onPress={this._back}>
+              <Text style={styles.buttonText} >BACK</Text>
+            </TouchableHighlight>
+        </View>
+      </View>
+    )
+  },
+
+  _back: function() {
+    console.log(this);
   }
 });
 
